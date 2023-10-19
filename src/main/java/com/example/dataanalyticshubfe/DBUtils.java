@@ -13,6 +13,8 @@ import java.sql.*;
 import java.io.IOException;
 
 public class DBUtils {
+    private static DatabaseConnection db;
+    private static Connection connection;
     public static void changeScene(ActionEvent event, String fxmlFile, String title, String firstName, String lastName) {
         Parent root = null;
         if (firstName != null && lastName != null) {
@@ -40,13 +42,16 @@ public class DBUtils {
 
     public static void signUpUser(ActionEvent event, String username, String password, String firstName, String lastName) {
 //        Useful for interacting with database
-        Connection connection = null;
+//        Connection connection = null;
         PreparedStatement psInsert = null;
         PreparedStatement psCheckUserExists = null;
         ResultSet resultSet = null;
 
         try {
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/data-analytics-hub", "root", "password");
+
+            db = DatabaseConnection.getInstance();
+            connection = db.getCon();
+//                    DriverManager.getConnection("jdbc:mysql://localhost:3306/data-analytics-hub", "root", "password");
             psCheckUserExists = connection.prepareStatement("SELECT * FROM Users WHERE username = ?");
             psCheckUserExists.setString(1, username);
             resultSet = psCheckUserExists.executeQuery();
@@ -68,7 +73,7 @@ public class DBUtils {
 
                 changeScene(event, "logged-in.fxml", "Welcome!", firstName, lastName);
             }
-        } catch (SQLException e) {
+        } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         } finally {
             if (resultSet != null) {
@@ -92,24 +97,19 @@ public class DBUtils {
                     e.printStackTrace();
                 }
             }
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
         }
 
     }
 
     public static void loginUser(ActionEvent event, String username, String password) {
-        Connection connection = null;
+//        Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
         try {
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/data-analytics-hub", "root", "password");
+            db = DatabaseConnection.getInstance();
+            connection = db.getCon();
+//            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/data-analytics-hub", "root", "password");
             preparedStatement = connection.prepareStatement("SELECT password, firstName, lastName FROM Users WHERE username = ?");
             preparedStatement.setString(1, username);
             resultSet = preparedStatement.executeQuery();
@@ -134,7 +134,7 @@ public class DBUtils {
                     }
                 }
             }
-        } catch (SQLException e) {
+        } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         } finally {
             if (resultSet != null) {
@@ -147,13 +147,6 @@ public class DBUtils {
             if (preparedStatement != null) {
                 try {
                     preparedStatement.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (connection != null) {
-                try {
-                    connection.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
