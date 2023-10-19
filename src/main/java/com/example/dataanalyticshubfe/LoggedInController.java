@@ -14,6 +14,9 @@ public class LoggedInController implements Initializable {
 
     @FXML
     private Button button_logout;
+//    button_posts
+    @FXML
+    private Button button_profile;
     @FXML
     private Label label_welcome;
     @Override
@@ -22,6 +25,18 @@ public class LoggedInController implements Initializable {
             @Override
             public void handle(ActionEvent event) {
                 DBUtils.changeScene(event, "sample.fxml", "Log in!", null, null);
+            }
+        });
+//        button_posts.setOnAction(new EventHandler<ActionEvent>() {
+//            @Override
+//            public void handle(ActionEvent event) {
+//                DBUtils.changeScene(event, "sample.fxml", "Log in!", null, null);
+//            }
+//        });
+        button_profile.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                DBUtils.changeScene(event, "edit-profile.fxml", "Edit your profile!", null, null);
             }
         });
 

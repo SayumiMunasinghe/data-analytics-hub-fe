@@ -15,6 +15,7 @@ import java.io.IOException;
 public class DBUtils {
     private static DatabaseConnection db;
     private static Connection connection;
+    static UserData userData = UserData.getInstance();
     public static void changeScene(ActionEvent event, String fxmlFile, String title, String firstName, String lastName) {
         Parent root = null;
         if (firstName != null && lastName != null) {
@@ -42,7 +43,6 @@ public class DBUtils {
 
     public static void signUpUser(ActionEvent event, String username, String password, String firstName, String lastName) {
 //        Useful for interacting with database
-//        Connection connection = null;
         PreparedStatement psInsert = null;
         PreparedStatement psCheckUserExists = null;
         ResultSet resultSet = null;
@@ -51,7 +51,6 @@ public class DBUtils {
 
             db = DatabaseConnection.getInstance();
             connection = db.getCon();
-//                    DriverManager.getConnection("jdbc:mysql://localhost:3306/data-analytics-hub", "root", "password");
             psCheckUserExists = connection.prepareStatement("SELECT * FROM Users WHERE username = ?");
             psCheckUserExists.setString(1, username);
             resultSet = psCheckUserExists.executeQuery();
@@ -70,7 +69,7 @@ public class DBUtils {
                 psInsert.setString(3, firstName);
                 psInsert.setString(4, lastName);
                 psInsert.executeUpdate();
-
+                readUser(event, username);
                 changeScene(event, "logged-in.fxml", "Welcome!", firstName, lastName);
             }
         } catch (ClassNotFoundException | SQLException e) {
@@ -102,14 +101,12 @@ public class DBUtils {
     }
 
     public static void loginUser(ActionEvent event, String username, String password) {
-//        Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
         try {
             db = DatabaseConnection.getInstance();
             connection = db.getCon();
-//            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/data-analytics-hub", "root", "password");
             preparedStatement = connection.prepareStatement("SELECT password, firstName, lastName FROM Users WHERE username = ?");
             preparedStatement.setString(1, username);
             resultSet = preparedStatement.executeQuery();
@@ -123,9 +120,10 @@ public class DBUtils {
                 while (resultSet.next()) {
                     String retrievedPassword = resultSet.getString("password");
                     String retrievedFirstName = resultSet.getString("firstName");
-                    String retrievedLasName = resultSet.getString("lastName");
+                    String retrievedLastName = resultSet.getString("lastName");
                     if (retrievedPassword.equals(password)) {
-                        changeScene(event, "logged-in.fxml", "Welcome!", retrievedFirstName, retrievedLasName);
+                        readUser(event, username);
+                        changeScene(event, "logged-in.fxml", "Welcome!", retrievedFirstName, retrievedLastName);
                     } else {
                         System.out.println("Password is incorrect!");
                         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -153,4 +151,115 @@ public class DBUtils {
             }
         }
     }
+
+    public static void readUser(ActionEvent event, String username) {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            db = DatabaseConnection.getInstance();
+            connection = db.getCon();
+            preparedStatement = connection.prepareStatement("SELECT password, firstName, lastName FROM Users WHERE username = ?");
+            preparedStatement.setString(1, username);
+            resultSet = preparedStatement.executeQuery();
+
+            if (!resultSet.isBeforeFirst()) {
+                System.out.println("User not found in the database!");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Provided credentials are incorrect!");
+                alert.show();
+            } else {
+                while (resultSet.next()) {
+                    String retrievedPassword = resultSet.getString("password");
+                    String retrievedFirstName = resultSet.getString("firstName");
+                    String retrievedLastName = resultSet.getString("lastName");
+
+                    userData.setUsername(username);
+                    userData.setPassword(retrievedPassword);
+                    userData.setFirstName(retrievedFirstName);
+                    userData.setLastName(retrievedLastName);
+                }
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (preparedStatement != null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    public static void updateUser(ActionEvent event, String initialUsername, String username, String password, String firstName, String lastName) {
+//        Useful for interacting with database
+        PreparedStatement psUpdate = null;
+        PreparedStatement psCheckUserExists = null;
+        ResultSet resultSet = null;
+
+        try {
+
+            db = DatabaseConnection.getInstance();
+            connection = db.getCon();
+            psCheckUserExists = connection.prepareStatement("SELECT * FROM Users WHERE username = ?");
+            psCheckUserExists.setString(1, initialUsername);
+
+            resultSet = psCheckUserExists.executeQuery();
+
+//            Used to check whether result set is empty
+//            Will return false if result set is empty
+            if (resultSet.isBeforeFirst()) {
+                psUpdate = connection.prepareStatement("UPDATE Users SET username = ?, password = ?, firstName = ?, lastName = ? WHERE username = ?");
+                psUpdate.setString(1, username);
+                psUpdate.setString(2, password);
+                psUpdate.setString(3, firstName);
+                psUpdate.setString(4, lastName);
+                psUpdate.setString(5, initialUsername);
+                psUpdate.executeUpdate();
+                readUser(event, username);
+                changeScene(event, "logged-in.fxml", "Welcome!", firstName, lastName);
+            } else {
+                System.out.println("This user does not exist");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Update unsuccessful.");
+                alert.show();
+
+
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (psCheckUserExists != null) {
+                try {
+                    psCheckUserExists.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (psUpdate != null) {
+                try {
+                    psUpdate.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
 }
