@@ -1,5 +1,7 @@
 package com.example.dataanalyticshubfe;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -16,6 +18,9 @@ public class DBUtils {
     private static DatabaseConnection db;
     private static Connection connection;
     static UserData userData = UserData.getInstance();
+    static PostList postList = PostList.getInstance();
+    static PostData postData = PostData.getInstance();
+    
     public static void changeScene(ActionEvent event, String fxmlFile, String title, String firstName, String lastName) {
         Parent root = null;
         if (firstName != null && lastName != null) {
@@ -262,4 +267,221 @@ public class DBUtils {
 
     }
 
+    public static void readPosts(ActionEvent event) {
+        ObservableList<Post> tempList = FXCollections.observableArrayList();
+                
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            db = DatabaseConnection.getInstance();
+            connection = db.getCon();
+            preparedStatement = connection.prepareStatement("SELECT * FROM Posts");
+            resultSet = preparedStatement.executeQuery();
+
+            if (!resultSet.isBeforeFirst()) {
+                System.out.println("No posts available in the DB");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("No posts yet!");
+                alert.show();
+            } else {
+                while (resultSet.next()) {
+                    int ID = resultSet.getInt("ID");
+                    String content = resultSet.getString("content");
+                    String author = resultSet.getString("author");
+                    int likes = resultSet.getInt("likes");
+                    int shares = resultSet.getInt("shares");
+                    String dateTime = resultSet.getString("dateTime");
+
+                    tempList.add(new Post(ID, content, author, likes, shares, dateTime));
+                }
+                postList.setPostList(tempList);
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (preparedStatement != null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void addPost(ActionEvent event, int ID, String content, String author, int likes, int shares, String dateTime) {
+//        Useful for interacting with database
+        PreparedStatement psInsert = null;
+        PreparedStatement psCheckIdExists = null;
+        ResultSet resultSet = null;
+
+        try {
+
+            db = DatabaseConnection.getInstance();
+            connection = db.getCon();
+            psCheckIdExists = connection.prepareStatement("SELECT * FROM Posts WHERE ID = ?");
+            psCheckIdExists.setInt(1, ID);
+            resultSet = psCheckIdExists.executeQuery();
+
+//            Used to check whether result set is empty
+//            Will return false if result set is empty
+            if (resultSet.isBeforeFirst()) {
+                System.out.println("Post ID already exists");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("This post ID cannot be used.");
+                alert.show();
+            } else {
+                psInsert = connection.prepareStatement("INSERT INTO Posts (ID, content, author, likes, shares, dateTime) VALUES (?, ?, ?, ?, ?, ?)");
+                psInsert.setInt(1, ID);
+                psInsert.setString(2, content);
+                psInsert.setString(3, author);
+                psInsert.setInt(4, likes);
+                psInsert.setInt(5, shares);
+                psInsert.setString(6, dateTime);
+                psInsert.executeUpdate();
+                readPosts(event);
+                changeScene(event, "posts-view.fxml", "Welcome!", null, null);
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (psCheckIdExists != null) {
+                try {
+                    psCheckIdExists.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (psInsert != null) {
+                try {
+                    psInsert.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    public static void getPost(ActionEvent event, int postId) {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        Post post = null;
+        try {
+            db = DatabaseConnection.getInstance();
+            connection = db.getCon();
+            preparedStatement = connection.prepareStatement("SELECT * FROM Posts WHERE ID = ?");
+            preparedStatement.setInt(1, postId);
+            resultSet = preparedStatement.executeQuery();
+
+            if (!resultSet.isBeforeFirst()) {
+                System.out.println("Post with given ID does not exist!");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Post not found in the database!");
+                alert.show();
+            } else {
+                while (resultSet.next()) {
+                    int ID = resultSet.getInt("ID");
+                    String content = resultSet.getString("content");
+                    String author = resultSet.getString("author");
+                    int likes = resultSet.getInt("likes");
+                    int shares = resultSet.getInt("shares");
+                    String dateTime = resultSet.getString("dateTime");
+
+                    postData.setID(ID);
+                    postData.setContent(content);
+                    postData.setAuthor(author);
+                    postData.setLikes(likes);
+                    postData.setShares(shares);
+                    postData.setDateTime(dateTime);
+
+//                    postList.setPostList(FXCollections.observableArrayList(new Post(pos)));
+
+                    changeScene(event, "posts-view.fxml", "Post with ID " + ID, null, null);
+                }
+
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (preparedStatement != null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void deletePost(ActionEvent event, int postId) {
+        PreparedStatement preparedStatement = null;
+        PreparedStatement psDeletePost = null;
+        ResultSet resultSet = null;
+        Post post = null;
+        try {
+            db = DatabaseConnection.getInstance();
+            connection = db.getCon();
+            preparedStatement = connection.prepareStatement("SELECT * FROM Posts WHERE ID = ?");
+            preparedStatement.setInt(1, postId);
+            resultSet = preparedStatement.executeQuery();
+
+            if (!resultSet.isBeforeFirst()) {
+                Util.showAlert(Alert.AlertType.ERROR, "Post with given ID does not exist!", "Post not found in the database!");
+            } else {
+                psDeletePost = connection.prepareStatement("DELETE FROM Posts WHERE ID = ?");
+                psDeletePost.setInt(1, postId);
+                boolean result = psDeletePost.execute();
+
+                if(!result) {
+                    Util.showAlert(Alert.AlertType.CONFIRMATION, "Post Deleted", "Post Successfully Deleted");
+                } else {
+                    Util.showAlert(Alert.AlertType.ERROR, "Post Could Not Be Deleted", "Post Not Deleted. Please try again");
+                }
+                readPosts(event);
+//                changeScene(event, "posts-view.fxml", "Posts", null, null);
+                }
+
+
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (preparedStatement != null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+
+<HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dataanalyticshubfe.PostController">
+   <children>
+      <AnchorPane prefHeight="400.0" prefWidth="61.0" style="-fx-background-color: #303948;" />
+      <AnchorPane prefHeight="400.0" prefWidth="564.0">
+         <children>
+            <Label alignment="CENTER" layoutY="36.0" prefHeight="22.0" prefWidth="391.0" text="Posts">
+               <font>
+                  <Font name="Arial Rounded MT Bold" size="18.0" />
+               </font>
+            </Label>
+            <Button fx:id="button_home" alignment="CENTER" layoutX="22.0" layoutY="335.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="82.0" style="-fx-background-color: transpareny; -fx-cursor: hand;" text="Home" textFill="#3025f7" underline="true">
+               <font>
+                  <Font name="Arial Rounded MT Bold" size="14.0" />
+               </font>
+            </Button>
+            <TableView fx:id="tv_posts" layoutX="22.0" layoutY="84.0" prefHeight="217.0" prefWidth="500.0">
+              <columns>
+                <TableColumn fx:id="idColumn" prefWidth="64.0" text="Post ID" />
+                <TableColumn fx:id="contentColumn" prefWidth="200.0" text="Content" />
+                  <TableColumn fx:id="authorColumn" minWidth="0.0" prefWidth="63.0" text="Author" />
+                  <TableColumn fx:id="likesColumn" prefWidth="39.0" text="Likes" />
+                  <TableColumn fx:id="sharesColumn" prefWidth="46.0" text="Shares" />
+                  <TableColumn fx:id="dateTimeColumn" prefWidth="87.0" text="Date Time" />
+              </columns>
+            </TableView>
+            <Button fx:id="button_add_post" alignment="CENTER" layoutX="98.0" layoutY="335.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="82.0" style="-fx-background-color: transpareny; -fx-cursor: hand;" text="Add Post" textFill="#3025f7" underline="true">
+               <font>
+                  <Font name="Arial Rounded MT Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="button_get_post" alignment="CENTER" layoutX="186.0" layoutY="335.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="82.0" style="-fx-background-color: transpareny; -fx-cursor: hand;" text="Get Post" textFill="#3025f7" underline="true">
+               <font>
+                  <Font name="Arial Rounded MT Bold" size="14.0" />
+               </font>
+            </Button>
+            <Button fx:id="button_delete_post" alignment="CENTER" layoutX="260.0" layoutY="335.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="111.0" style="-fx-background-color: transpareny; -fx-cursor: hand;" text="Delete Post" textFill="#3025f7" underline="true">
+               <font>
+                  <Font name="Arial Rounded MT Bold" size="14.0" />
+               </font>
+            </Button>
+         </children>
+      </AnchorPane>
+   </children>
+</HBox>
